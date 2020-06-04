@@ -34,7 +34,7 @@ class Config(object):
     optimizer = 'sgd'
 
     use_gpu = True  # use GPU or not
-    gpu_id = '0, 1'
+    # gpu_id = '1'
     num_workers = 4  # how many workers for loading data
     print_freq = 100  # print info every N batch
 
