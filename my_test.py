@@ -7,6 +7,7 @@ Created on 18-5-30 下午4:55
 from __future__ import print_function
 import os
 import cv2
+import pickle
 from models.resnet import *
 import torch
 import numpy as np
@@ -152,7 +153,8 @@ def lfw_test(model, img_paths, identity_list, compair_list, batch_size):
 
 def voxceleb2_test(model, img_paths, batch_size):
     features, cnt = get_features(model, img_paths, batch_size=batch_size)
-    print(features.shape)
+    # print(features.shape)
+    return features
 
 
 if __name__ == '__main__':
@@ -171,13 +173,41 @@ if __name__ == '__main__':
     model.load_state_dict(torch.load(opt.test_model_path))
     model.to(torch.device("cuda"))
     print('Loaded model checkpoint')
-
-    # identity_list = get_lfw_list(opt.lfw_test_list)
-    # img_paths = [os.path.join(opt.lfw_root, each) for each in identity_list]
-    img_paths = ['/mnt/Data/Data/modidatasets/VoxCeleb2/train_processed/id01185/VhkwMUvywiQ/00046/9_continuous_frame.png']
     model.eval()
-    #lfw_test(model, img_paths, identity_list, opt.lfw_test_list, opt.test_batch_size)
-    voxceleb2_test(model, img_paths, 1)
 
+    BASE_DIR = '~/modidatasets/VoxCeleb2/preprocessed_data/test'
+    ids = os.listdir(BASE_DIR)
+    ids = [os.path.join(BASE_DIR, idx) for idx in ids]
 
+    for idx in ids:
+        frames = os.listdir(idx)
+        frames = [os.path.join(idx, frame) for frame in frames]
+        frames = [frame for frame in frames if 'continuous_frame' in frame]
+
+        # there should be at most 32 frames
+        features = voxceleb2_test(model, frames, 32) # 32 x 1024
+        features = np.mean(features, axis=0)
+        
+        # img_paths = ['/mnt/Data/Data/modidatasets/VoxCeleb2/train_processed/id01185/VhkwMUvywiQ/00046/9_continuous_frame.png']
+        # voxceleb2_test(model, img_paths, 32)
+
+        with open('{}_averaged_decriptor.pkl'.format(idx), 'wb') as handle:
+            pickle.dump(features, handle)
+
+    print('Averaged decriptors extracted')
+
+    BASE_DIR = '~/path to synthesized images'
+    ids = os.listdir(BASE_DIR)
+    ids = [os.path.join(BASE_DIR, idx) for idx in ids]
+
+    for idx in ids:
+        frames = os.listdir(idx)
+        frames = [os.path.join(idx, frame) for frame in frames]
+        
+        features = voxceleb2_test(model, frames, 32)
+        
+        with open('{}_synthesized_descriptors.pkl'.format(idx), 'wb') as handle:
+            pickle.dump(features, handle)
+
+    print('Descriptors computed for synthesized images')    
 
