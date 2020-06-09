@@ -59,3 +59,7 @@ def get_identity_error(ids):
     i_t = i_t / (30 * 29 * 32)
 
     return i_t
+
+i_e = get_identity_error(ids)
+print('Identity error:{}'.format(i_e))
+
