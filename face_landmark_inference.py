@@ -20,6 +20,7 @@ def get_features(path_to_images):
         except:
             continue
 
+        preds = preds[0] # 68 x 2
         with open(SAVE_DIR + 'path', 'wb') as handle:
             pickle.dump(preds, handle)        
 
