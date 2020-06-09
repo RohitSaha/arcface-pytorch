@@ -1,4 +1,6 @@
 import pickle
+import numpy as np
+
 
 BASE_DIR = 'path to ids'
 ids = sorted(os.listdir(BASE_DIR))
