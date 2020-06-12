@@ -178,7 +178,7 @@ if __name__ == '__main__':
     '''Directory:
     real images: ~/modidatasets/VoxCeleb2/preprocessed_data/test/ids/identity'
     synthesized images: 
-        ~/synthesized_images/
+        ~/synthesized_images_identity/
             <id_1>/
                 <id_1_2>/
                     img_n
@@ -218,7 +218,7 @@ if __name__ == '__main__':
             mp4s = os.listdir(code_path)
             for mp4 in mp4s:
                 mp4_path = os.path.join(code_path, mp4)
-                frames = os.listdir(mp4_path)
+                frames = sorted(os.listdir(mp4_path))
 
                 frames = [os.path.join(mp4_path, frame) for frame in frames]
                 frames = [frame for frame in frames if 'random_frame' in frame]
@@ -235,7 +235,7 @@ if __name__ == '__main__':
 
     print('Averaged decriptors extracted')
 
-    SYNTH_DIR = '/home/ubuntu/synthesized_images' 
+    SYNTH_DIR = '/home/ubuntu/synthesized_images_identity' 
     ids = os.listdir(SYNTH_DIR)
 
     for idx in ids:
@@ -244,7 +244,7 @@ if __name__ == '__main__':
 
         for sub_idx in sub_ids:
             sub_idx_path = os.path.join(idx_path, sub_idx)
-            frames = os.listdir(sub_idx_path)
+            frames = sorted(os.listdir(sub_idx_path))
             frames = [os.path.join(sub_idx_path, frame) for frame in frames]
             frames = [frame for frame in frames if 'random_frame' in frame]
 
