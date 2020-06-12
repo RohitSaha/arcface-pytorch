@@ -2,12 +2,7 @@ import pickle
 import numpy as np
 
 
-BASE_DIR = 'path to ids'
-ids = sorted(os.listdir(BASE_DIR))
-ids = [os.path.join(BASE_DIR, idx) for idx in ids]
-
-
-def get_cosine_similarity(avg_desc, synth_desc):
+def sum_over_j(avg_desc, synth_desc):
     # sum_1_32 [1 - csim(R(T_k(I_i_j)), r_k)]
 
     # synth_desc : 32 x 1024
@@ -23,45 +18,61 @@ def get_cosine_similarity(avg_desc, synth_desc):
     return np.sum(cos_sim)
 
 
-def sum_over_i(ids, avg_desc_idx, avg_desc):
-    # sum_1_30, i neq k
+def sum_over_i(idx, idx_path):
+    # idx_path: ~/descriptor_files/idx/
+    # idx: original id of the current celebrity
 
-    sum_1_30 = 0.0
-    synth_desc_ids = list(set(ids) - set(avg_desc_idx))
-    for idx in synth_desc_ids:
-        with open(idx, 'rb') as handle:
+    # sum_1_30, i neq k
+    sum_1_29 = 0.0
+
+    avg_desc_path = os.path.join(idx_path, idx + '.pkl')
+    with open(avg_desc_path, 'rb') as handle:
+        avg_desc = pickle.load(handle)
+    
+    avg_desc = np.reshape(avg_desc, [1, 1024]) 
+
+    sub_ids = os.listdir(idx_path)
+    synth_desc_ids = list(set(sub_ids) - set(idx))
+
+    for sub_idx in synth_desc_ids:
+        sub_idx_path = os.path.join(idx_path, sub_idx + '.pkl')
+        with open(sub_idx_path, 'rb') as handle:
             synth_desc = pickle.load(handle)
 
         # avg_desc: 1 x 1024
         # synth_desc: 32 x 1024
 
-        sum_1_30 += get_cosine_similarity(avg_desc, synth_desc)
+        sum_1_29 += sum_over_j(avg_desc, synth_desc)
 
-    return sum_1_30
+    return sum_1_29
 
 
-def sum_over_k(ids):
+def sum_over_k(DESC_DIR, ids):
+    # ids: [idx_1, idx_2, ..., idx_n]
+    # DESC_DIR = /home/ubuntu/descriptor_files
+
     # sum_1_30, k
-
     sum_1_30 = 0.0
+
     for idx in ids:
-        with open(idx, 'rb') as handle:
-            avg_desc = pickle.load(handle)
-
-        # avg_desc: 1 x 1024
-
-        sum_1_30 += sum_over_i(ids, idx, avg_desc)
+        idx_path = os.path.join(DESC_DIR, idx)
+        sum_1_30 += sum_over_i(idx, idx_path)
 
     return sum_1_30
 
 
-def get_identity_error(ids):
+def get_identity_error(DESC_DIR, ids):
 
-    i_t = sum_over_k(ids)
+    i_t = sum_over_k(DESC_DIR, ids)
     i_t = i_t / (30 * 29 * 32)
 
     return i_t
 
 i_e = get_identity_error(ids)
 print('Identity error:{}'.format(i_e))
+DESC_DIR = '/home/ubuntu/descriptors_files'
+ids = sorted(os.listdir(DESC_DIR))
+identity_error = get_identity_error(DESC_DIR, ids)
+print('Identity error:{}'.format(identity_error))
+
 
