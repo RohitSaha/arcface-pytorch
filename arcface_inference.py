@@ -205,8 +205,8 @@ if __name__ == '__main__':
     Read from synthesized directory
     Save to pickle folder
     '''
-    DESC_DIR = '~/desciptors_files'
-    REAL_DIR = '~/modidatasets/VoxCeleb2/preprocessed_data/test/ids/identity'
+    DESC_DIR = '/home/ubuntu/desciptors_files'
+    REAL_DIR = '/home/ubuntu/modidatasets/VoxCeleb2/preprocessed_data/test/ids/identity'
 
     ids = os.listdir(REAL_DIR)
 
@@ -226,19 +226,16 @@ if __name__ == '__main__':
                 # there should be at most 32 frames
                 features = voxceleb2_test(model, frames, 32) # 32 x 1024
                 features = np.mean(features, axis=0)
-                
-                # img_paths = ['/mnt/Data/Data/modidatasets/VoxCeleb2/train_processed/id01185/VhkwMUvywiQ/00046/9_continuous_frame.png']
-                # voxceleb2_test(model, img_paths, 32)
-                save_dir = os.path.join(DESC_DIR, '{}'.format(idx), '{}.pkl'.format(idx))
+                save_dir = os.path.join(DESC_DIR, '{}'.format(idx))
                 if not os.path.exists(save_dir):
                     os.makedirs(save_dir)
 
-                with open(save_dir, 'wb') as handle:
+                with open(os.path.join(save_dir, '{}.pkl'.format(idx)), 'wb') as handle:
                     pickle.dump(features, handle)
 
     print('Averaged decriptors extracted')
 
-    SYNTH_DIR = '~/synthesized_images' 
+    SYNTH_DIR = '/home/ubuntu/synthesized_images' 
     ids = os.listdir(SYNTH_DIR)
 
     for idx in ids:
@@ -253,11 +250,11 @@ if __name__ == '__main__':
 
             features = voxceleb2_test(model, frames, 32)
             
-            save_dir = os.path.join(SYNTH_DIR, '{}'.format(idx), '{}.pkl'.format(sub_idx))
+            save_dir = os.path.join(DESC_DIR, '{}'.format(idx))
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
 
-            with open(save_dir, 'wb') as handle:
+            with open(os.path.join(save_dir, '{}.pkl'.format(sub_idx)), 'wb') as handle:
                 pickle.dump(features, handle)
 
     print('Descriptors computed for synthesized images')    
