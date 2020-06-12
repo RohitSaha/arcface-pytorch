@@ -13,9 +13,11 @@ def sum_over_j(avg_desc, synth_desc):
     synth_desc_norm = np.linalg.norm(synth_desc, axis=-1) # 32 x 1
     norm_prod = avg_desc_norm * synth_desc_norm # 32 x 1
 
-    cos_sim = 1 - dot_prod / norm_prod # 32 x 1
+    cos_sim = 1. - dot_prod / norm_prod # 32 x 1
 
-    return np.sum(cos_sim)
+    sum_cos_sim = np.sum(cos_sim)[0] # 1
+
+    return sum_cos_sim
 
 
 def sum_over_i(idx, idx_path):
