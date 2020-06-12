@@ -11,67 +11,60 @@ def l2_distance(features_1, features_2):
     diff = diff ** 0.5
     diff = np.mean(diff) # [1]
 
-    return diff
+    return diff[0]
 
 
-def sum_over_j(real_landmark_paths, synthesized_landmark_paths):
+def sum_over_j(driver_path, driven_path):
+    # driver_path: full path to driver folder
+    # driven_path: full path to driven folder
+
     # sum j_33_64
     sum_j = 0.0
 
-    # Frame id should be the same in both cases.
-    # Equivalent frames will be compared.
-    # There should be at most 32 frames.
-    real_landmark_paths = sorted(real_landmark_paths)
-    synthesized_landmark_paths = sorted(synthesized_landmark_paths)
+    driver_pickle_files = sorted(os.listdir(driver_path))
+    driven_pickle_files = sorted(os.listdir(driven_path))
 
-    for real_path, synth_path in zip(real_landmark_paths, synthesized_landmark_paths):
-        with open(real_path, 'rb') as handle:
+    for driver_pi, driven_pi in zip(driver_pickle_files, driven_pickle_files):
+        driver_pi_path = os.path.join(driver_path, driver_pi)
+        driven_pi_path = os.path.join(driven_path, driven_pi)
+
+        with open(driver_pi_path, 'rb') as handle:
             features_1 = pickle.load(handle)
-        with open(synth_path, 'rb') as handle:
+        with open(driven_pi_path, 'rb') as handle:
             features_2 = pickle.load(handle)
 
         sum_j += l2_distance(features_1, features_2)
 
+
     return sum_j
 
 
-def sum_over_k(REAL_DIR, FAKE_DIR):
-    # gather real facial and fake facial pickle files
-    # corresponding to each ID
+def sum_over_k(LANDMARK_DIR, ids):
+    # LANDMARK_DIR = /home/ubuntu/landmark_files
+    # ids = [idx_1, idx_2, ..., idx_n]
+
     sum_k = 0.0
 
-    ids = os.listdir(REAL_DIR) # same ids should be in FAKE_DIR
-
-    # gather paths to pickle files of ids
     for idx in ids:
-        # list pickle files
-        real_landmark_paths = sorted(os.listdir(REAL_DIR, idx)) 
-        real_landmark_paths = [
-            os.path.join(REAL_DIR, idx, path)
-            for path in real_landmark_paths]
-        fake_landmark_paths = sorted(os.listdir(FAKE_DIR, idx))
-        fake_landmark_paths = [
-            os.path.join(FAKE_DIR, idx, path)
-            for path in fake_landmark_paths]
+        idx_path = os.path.join(LANDMARK_DIR, idx)
+        driver_path = os.path.join(idx_path, 'driver')
+        driven_path = os.path.join(idx_path, 'driven')
 
-        # make sure the indexes in both paths correspond to the same
-        # frame numbers in proper order
-
-        sum_k += sum_over_j(real_landmark_paths, fake_landmark_paths)
+        sum_k += sum_over_j(driver_path, driven_path)
 
     return sum_k
 
 
-def get_pose_rec_error():
-    REAL_DIR = 'path to directory that has real images' 
-    FAKE_DIR = 'path to directory that has fake images'
+def get_pose_rec_error(LANDMARK_DIR, ids):
 
-    pose_error = sum_over_k(REAL_DIR, FAKE_DIR)
+    pose_error = sum_over_k(LANDMARK_DIR, ids)
 
-    return pose_error / (30. * 32)
+    return pose_error / (30. * 32.)
 
 
-pose_error = get_pose_rec_error()
+LANDMARK_DIR = '/home/ubuntu/landmark_files'
+ids = sorted(os.listdir(LANDMARK_DIR))
+pose_error = get_pose_rec_error(LANDMARK_DIR, ids)
 print('Pose reconstruction error:{}'.format(pose_error))
 
 

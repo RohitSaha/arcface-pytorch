@@ -42,11 +42,17 @@ def get_features(path_to_images):
     landmark files:
         ~/landmark_files/
             <id_1>/
-                id_1.pkl # driver - frame 32 -> 64
-                id_1_1.pkl # synthesized using driver - frame 32 -> 64
+                <driver>/
+                    id_1_frame-number.pkl # driver - frame 32 -> 64
+                    id_1-frame-number.pkl
+                <driven>/
+                    id_1_1_frame-number.pkl # synthesized using driver - frame 32 -> 64
+                    id_1_1_frame-number.pkl
             <id_2>/
-                id_2.pkl
-                id_2_2.pkl
+                <driver>/
+                    id_2_frame-number.pkl
+                <driven>/
+                    id_2_2_frame-number.pkl
 
     Read from original images
     Read from synthesized directory
@@ -68,7 +74,7 @@ for idx in ids:
             frames = sorted(os.listdir(mp4_path))
             frames = [os.path.join(mp4_path, frame) for frame in frames]
             frames = [frame for frame in frames if 'random_frame' in frame]
-
+            
             for frame in frames:
                 img = cv2.imread(frame)
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -79,11 +85,12 @@ for idx in ids:
                     continue
 
                 preds = preds[0] # 68 x 2
-                save_dir = os.path.join(LANDMARK_DIR, '{}'.format(idx))
+                save_dir = os.path.join(LANDMARK_DIR, '{}'.format(idx), 'driver')
                 if not os.path.exists(save_dir):
                     os.makedirs(save_dir)
 
-                with open(os.path.join(save_dir, '{}.pkl'.format(idx)), 'wb') as handle:
+                frame_number = frame.split('/')[-1].split('_')[0]
+                with open(os.path.join(save_dir, '{}_{}.pkl'.format(idx, frame_number)), 'wb') as handle:
                     pickle.dump(preds, handle)        
 
 print('Landmark for real images computed')
@@ -111,11 +118,12 @@ for idx in ids:
                 continue
 
             preds = preds[0]
-            save_dir = os.path.join(LANDMARK_DIR, '{}.pkl'.format(idx))
+            save_dir = os.path.join(LANDMARK_DIR, '{}.pkl'.format(idx), 'driven')
             if not os.path.join(save_dir):
                 os.makedirs(save_dir)
 
-            with open(os.path.join(save_dir, '{}.pkl'.format(sub_idx)), 'wb') as handle:
+            frame_number = frame.split('/')[-1].split('_')[0]
+            with open(os.path.join(save_dir, '{}_{}.pkl'.format(sub_idx, frame_number)), 'wb') as handle:
                 pickle.dump(preds, handle)
 
 

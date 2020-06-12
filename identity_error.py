@@ -64,7 +64,7 @@ def sum_over_k(DESC_DIR, ids):
 def get_identity_error(DESC_DIR, ids):
 
     i_t = sum_over_k(DESC_DIR, ids)
-    i_t = i_t / (30 * 29 * 32)
+    i_t = i_t / (30. * 29. * 32.)
 
     return i_t
 
