@@ -14,7 +14,7 @@ import numpy as np
 import time
 from config.config import Config
 from torch.nn import DataParallel
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 def get_lfw_list(pair_list):
     with open(pair_list, 'r') as fd:
@@ -178,7 +178,7 @@ if __name__ == '__main__':
     '''Directory:
     real images: ~/modidatasets/VoxCeleb2/preprocessed_data/test/ids/identity'
     synthesized images: 
-        ~/synthesized_images_identity/
+        ~/synthesized_images/
             <id_1>/
                 <id_1_2>/
                     img_n
@@ -205,7 +205,7 @@ if __name__ == '__main__':
     Read from synthesized directory
     Save to pickle folder
     '''
-    DESC_DIR = '/home/ubuntu/desciptors_files'
+    DEST_DIR = '/home/ubuntu/descriptors'
     REAL_DIR = '/home/ubuntu/modidatasets/VoxCeleb2/preprocessed_data/test/ids/identity'
 
     ids = os.listdir(REAL_DIR)
@@ -226,7 +226,7 @@ if __name__ == '__main__':
                 # there should be at most 32 frames
                 features = voxceleb2_test(model, frames, 32) # 32 x 1024
                 features = np.mean(features, axis=0)
-                save_dir = os.path.join(DESC_DIR, '{}'.format(idx))
+                save_dir = os.path.join(DEST_DIR, '{}'.format(idx))
                 if not os.path.exists(save_dir):
                     os.makedirs(save_dir)
 
@@ -235,22 +235,22 @@ if __name__ == '__main__':
 
     print('Averaged decriptors extracted')
 
-    SYNTH_DIR = '/home/ubuntu/synthesized_images_identity' 
+    SYNTH_DIR = '/home/ubuntu/synthesized_images' 
     ids = os.listdir(SYNTH_DIR)
 
     for idx in ids:
         idx_path = os.path.join(SYNTH_DIR, idx)
         sub_ids = os.listdir(idx_path)
+        sub_ids = [sub_idx for sub_idx in sub_ids if not sub_idx == idx]
 
         for sub_idx in sub_ids:
             sub_idx_path = os.path.join(idx_path, sub_idx)
             frames = sorted(os.listdir(sub_idx_path))
             frames = [os.path.join(sub_idx_path, frame) for frame in frames]
-            frames = [frame for frame in frames if 'random_frame' in frame]
 
-            features = voxceleb2_test(model, frames, 32)
+            features = voxceleb2_test(model, frames, len(frames))
             
-            save_dir = os.path.join(DESC_DIR, '{}'.format(idx))
+            save_dir = os.path.join(DEST_DIR, '{}'.format(idx))
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
 
