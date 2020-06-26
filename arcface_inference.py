@@ -31,11 +31,7 @@ def get_lfw_list(pair_list):
     return data_list
 
 
-def load_image(img_path):
-    image = cv2.imread(img_path, 0)
-
-    # resizing because ArcNet requires images of 128 x 128
-    image = cv2.resize(image, (128, 128))
+def load_image(image):
     if image is None:
         return None
     image = np.dstack((image, np.fliplr(image)))
@@ -47,12 +43,27 @@ def load_image(img_path):
     return image
 
 
-def get_features(model, test_list, batch_size=10):
+def get_features(model, test_list, batch_size=10, masks=None):
     images = None
     features = None
     cnt = 0
     for i, img_path in enumerate(test_list):
-        image = load_image(img_path)
+        image = cv2.imread(img_path, 0)
+        image = cv2.resize(image, (128, 128))
+        if masks:
+            frame_number = img_path.split('/')[-1].split('_')[0]
+            mask_path = [
+                mask
+                for mask in masks
+                if frame_number in mask][0]
+            mask_image = cv2.imread(mask_path, 0)
+            mask_image = cv2.resize(mask_image, (128, 128))
+            mask_image = np.mean(mask_image, axis=-1, keepdims=True)
+            mask_image = np.where(mask_image > 0.001, 1., 0.)
+            image = image * mask_image
+
+        image = load_image(image)
+
         if image is None:
             print('read {} error'.format(img_path))
 
@@ -151,8 +162,8 @@ def lfw_test(model, img_paths, identity_list, compair_list, batch_size):
     print('lfw face verification accuracy: ', acc, 'threshold: ', th)
     return acc
 
-def voxceleb2_test(model, img_paths, batch_size):
-    features, cnt = get_features(model, img_paths, batch_size=batch_size)
+def voxceleb2_test(model, img_paths, batch_size, masks=None):
+    features, cnt = get_features(model, img_paths, batch_size=batch_size, masks=None)
     # print(features.shape)
     return features
 
@@ -218,13 +229,13 @@ if __name__ == '__main__':
             mp4s = os.listdir(code_path)
             for mp4 in mp4s:
                 mp4_path = os.path.join(code_path, mp4)
-                frames = sorted(os.listdir(mp4_path))
-
-                frames = [os.path.join(mp4_path, frame) for frame in frames]
-                frames = [frame for frame in frames if 'random_frame' in frame]
+                images = sorted(os.listdir(mp4_path))
+                images = [os.path.join(mp4_path, image) for image in images]
+                frames = [image for image in images if 'random_frame' in image]
+                masks = [image for image in images if 'random_mask' in image]
 
                 # there should be at most 32 frames
-                features = voxceleb2_test(model, frames, 32) # 32 x 1024
+                features = voxceleb2_test(model, frames, 32, masks=masks) # 32 x 1024
                 features = np.mean(features, axis=0)
                 save_dir = os.path.join(DEST_DIR, '{}'.format(idx))
                 if not os.path.exists(save_dir):
@@ -248,7 +259,7 @@ if __name__ == '__main__':
             frames = sorted(os.listdir(sub_idx_path))
             frames = [os.path.join(sub_idx_path, frame) for frame in frames]
 
-            features = voxceleb2_test(model, frames, len(frames))
+            features = voxceleb2_test(model, frames, len(frames), masks=None)
             
             save_dir = os.path.join(DEST_DIR, '{}'.format(idx))
             if not os.path.exists(save_dir):
