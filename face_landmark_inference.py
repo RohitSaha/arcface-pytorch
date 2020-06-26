@@ -1,5 +1,6 @@
 import os
 import face_alignment
+import pickle
 import cv2
 
 fa = face_alignment.FaceAlignment(
@@ -58,7 +59,7 @@ def get_features(path_to_images):
     Read from synthesized directory
     Save to pickle folder
 '''
-LANDMARK_DIR = '/home/ubuntu/landmark_files'
+LANDMARK_DIR = '/home/ubuntu/landmark'
 REAL_DIR = '/home/ubuntu/modidatasets/VoxCeleb2/preprocessed_data/test/ids/pose'
 
 ids = os.listdir(REAL_DIR)
@@ -95,36 +96,34 @@ for idx in ids:
 
 print('Landmark for real images computed')
 
-SYNTH_DIR = '/home/ubuntu/synthesized_images_pose'
+SYNTH_DIR = '/home/ubuntu/synthesized_images'
 ids = os.listdir(SYNTH_DIR)
 
 for idx in ids:
     idx_path = os.path.join(SYNTH_DIR, idx)
-    sub_ids = os.listdir(idx_path)
+    sub_idx_path = os.path.join(idx_path, idx)
 
-    for sub_idx in sub_ids:
-        sub_idx_path = os.path.join(idx_path, sub_idx)
-        frames = sorted(os.listdir(sub_idx_path))
-        frames = [os.path.join(sub_idx_path, frame) for frame in frames]
-        frames = [frame for frame in frames if 'random_frame' in frame]
+    frames = sorted(os.listdir(sub_idx_path))
+    frames = [os.path.join(sub_idx_path, frame) for frame in frames]
+    frames = [frame for frame in frames if 'random_frame' in frame]
 
-        for frame in frames:
-            img = cv2.imread(frame)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            
-            try:
-                preds, boxes = fa.get_landmarks(img)
-            except:
-                continue
+    for frame in frames:
+        img = cv2.imread(frame)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        
+        try:
+            preds, boxes = fa.get_landmarks(img)
+        except:
+            continue
 
-            preds = preds[0]
-            save_dir = os.path.join(LANDMARK_DIR, '{}.pkl'.format(idx), 'driven')
-            if not os.path.join(save_dir):
-                os.makedirs(save_dir)
+        preds = preds[0]
+        save_dir = os.path.join(LANDMARK_DIR, '{}'.format(idx), 'driven')
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
 
-            frame_number = frame.split('/')[-1].split('_')[0]
-            with open(os.path.join(save_dir, '{}_{}.pkl'.format(sub_idx, frame_number)), 'wb') as handle:
-                pickle.dump(preds, handle)
+        frame_number = frame.split('/')[-1].split('_')[0]
+        with open(os.path.join(save_dir, '{}_{}.pkl'.format(idx, frame_number)), 'wb') as handle:
+            pickle.dump(preds, handle)
 
 
 print('Landmark for synthesized images computed')
