@@ -70,13 +70,14 @@ def sum_over_k(DESC_DIR, ids):
 def get_identity_error(DESC_DIR, ids):
 
     i_t = sum_over_k(DESC_DIR, ids)
-    i_t = i_t / (1. * 31. * 25.) # first number is 1 since id00017
+    i_t = i_t / (float(len(ids)) * 31. * 25.) # first number is 1 since id00017
 
     return i_t
 
 
 DESC_DIR = '/home/ubuntu/descriptors'
 ids = sorted(os.listdir(DESC_DIR))
+ids = ['id00017', 'id00081']
 identity_error = get_identity_error(DESC_DIR, ids)
 print('Identity error:{}'.format(identity_error))
 
