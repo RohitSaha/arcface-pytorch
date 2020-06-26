@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import face_alignment
 import pickle
 import cv2
@@ -72,14 +73,27 @@ for idx in ids:
         mp4s = os.listdir(code_path)
         for mp4 in mp4s:
             mp4_path = os.path.join(code_path, mp4)
-            frames = sorted(os.listdir(mp4_path))
-            frames = [os.path.join(mp4_path, frame) for frame in frames]
-            frames = [frame for frame in frames if 'random_frame' in frame]
+            images = sorted(os.listdir(mp4_path))
+            images = [os.path.join(mp4_path, image) for image in images]
+            frames = [image for image in images if 'random_frame' in image]
+            masks = [image for image in images if 'random_mask' in image]
             
             for frame in frames:
+                frame_number = frame.split('/')[-1].split('_')[0]
+                mask_image = [
+                    mask
+                    for mask in masks
+                    if frame_number in mask][0]
+
                 img = cv2.imread(frame)
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
+                img = cv2.resize(img, (128, 128))
+                mask = cv2.imread(mask_image)
+                mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)
+                mask = cv2.resize(mask, (128, 128))
+                mask = np.mean(mask, axis=-1, keepdims=True)
+                mask = np.where(mask > 0.001, 1., 0.)
+                img = img * mask
                 try:
                     preds, boxes = fa.get_landmarks(img)
                 except:
