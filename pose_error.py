@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import pickle
 
 def l2_distance(features_1, features_2):
@@ -7,11 +8,11 @@ def l2_distance(features_1, features_2):
 
     diff = features_1 - features_2
     diff = diff ** 2 # 68 x 2
-    diff = np.reduce_sum(diff, axis=-1) # 68 x 1
+    diff = np.mean(diff, axis=-1) # 68 x 1
     diff = diff ** 0.5
     diff = np.mean(diff) # [1]
 
-    return diff[0]
+    return diff
 
 
 def sum_over_j(driver_path, driven_path):
@@ -23,7 +24,6 @@ def sum_over_j(driver_path, driven_path):
 
     driver_pickle_files = sorted(os.listdir(driver_path))
     driven_pickle_files = sorted(os.listdir(driven_path))
-
     for driver_pi, driven_pi in zip(driver_pickle_files, driven_pickle_files):
         driver_pi_path = os.path.join(driver_path, driver_pi)
         driven_pi_path = os.path.join(driven_path, driven_pi)
@@ -59,11 +59,12 @@ def get_pose_rec_error(LANDMARK_DIR, ids):
 
     pose_error = sum_over_k(LANDMARK_DIR, ids)
 
-    return pose_error / (30. * 32.)
+    return pose_error / (float(len(ids)) * 32.)
 
 
-LANDMARK_DIR = '/home/ubuntu/landmark_files'
+LANDMARK_DIR = '/home/ubuntu/landmark'
 ids = sorted(os.listdir(LANDMARK_DIR))
+ids = ['id00017', 'id00081']
 pose_error = get_pose_rec_error(LANDMARK_DIR, ids)
 print('Pose reconstruction error:{}'.format(pose_error))
 
