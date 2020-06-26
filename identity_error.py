@@ -1,5 +1,6 @@
 import pickle
 import numpy as np
+import os
 
 
 def sum_over_j(avg_desc, synth_desc):
@@ -10,12 +11,12 @@ def sum_over_j(avg_desc, synth_desc):
     dot_prod = np.dot(synth_desc, avg_desc.T) # 32 x 1
     
     avg_desc_norm = np.linalg.norm(avg_desc) # 1
-    synth_desc_norm = np.linalg.norm(synth_desc, axis=-1) # 32 x 1
-    norm_prod = avg_desc_norm * synth_desc_norm # 32 x 1
+    synth_desc_norm = np.linalg.norm(synth_desc, axis=-1) # 32
+    norm_prod = avg_desc_norm * synth_desc_norm # 32
+    norm_prod = np.reshape(norm_prod, (norm_prod.shape[0], 1))
 
-    cos_sim = 1. - dot_prod / norm_prod # 32 x 1
-
-    sum_cos_sim = np.sum(cos_sim)[0] # 1
+    cos_sim = 1. - np.divide(dot_prod, norm_prod) # 32 x 1
+    sum_cos_sim = np.sum(cos_sim) # 1
 
     return sum_cos_sim
 
@@ -34,10 +35,13 @@ def sum_over_i(idx, idx_path):
     avg_desc = np.reshape(avg_desc, [1, 1024]) 
 
     sub_ids = os.listdir(idx_path)
-    synth_desc_ids = list(set(sub_ids) - set(idx))
+    synth_desc_ids = [
+        sub_idx
+        for sub_idx in sub_ids
+        if not sub_idx == idx + '.pkl']
 
     for sub_idx in synth_desc_ids:
-        sub_idx_path = os.path.join(idx_path, sub_idx + '.pkl')
+        sub_idx_path = os.path.join(idx_path, sub_idx)
         with open(sub_idx_path, 'rb') as handle:
             synth_desc = pickle.load(handle)
 
@@ -66,13 +70,12 @@ def sum_over_k(DESC_DIR, ids):
 def get_identity_error(DESC_DIR, ids):
 
     i_t = sum_over_k(DESC_DIR, ids)
-    i_t = i_t / (30. * 29. * 32.)
+    i_t = i_t / (1. * 31. * 25.) # first number is 1 since id00017
 
     return i_t
 
-i_e = get_identity_error(ids)
-print('Identity error:{}'.format(i_e))
-DESC_DIR = '/home/ubuntu/descriptors_files'
+
+DESC_DIR = '/home/ubuntu/descriptors'
 ids = sorted(os.listdir(DESC_DIR))
 identity_error = get_identity_error(DESC_DIR, ids)
 print('Identity error:{}'.format(identity_error))
